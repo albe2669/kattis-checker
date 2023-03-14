@@ -1,4 +1,5 @@
 use clap::Parser;
+use prettytable::{row, Table};
 use reqwest::{blocking::Client, blocking::ClientBuilder, cookie::Jar, Url};
 use std::{collections::HashMap, sync::Arc};
 
@@ -18,6 +19,9 @@ struct Args {
 
     #[arg(short, long)]
     problems_dir: String,
+
+    #[arg(long, default_value = "false")]
+    print_online: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -183,7 +187,7 @@ fn get_local_problems(args: &Args, online_problems: &mut HashMap<String, Problem
     println!("Found {counter} local problems");
 }
 
-fn print_status(problems: &HashMap<String, Problem>) {
+fn print_status(args: &Args, problems: &HashMap<String, Problem>) {
     let mut local = Vec::new();
     let mut online = Vec::new();
 
@@ -195,17 +199,20 @@ fn print_status(problems: &HashMap<String, Problem>) {
         }
     }
 
-    println!("=======================================");
-    println!("Problems that are local but not online:");
+    let mut table = Table::new();
+    table.set_titles(row!["Name", "URL", "Local", "Online"]);
+
     for problem in local {
-        println!("{}", problem.name);
+        table.add_row(row![problem.name, "", true, false]);
     }
 
-    println!("=======================================");
-    println!("Problems that are online but not local:");
-    for problem in online {
-        println!("{}\t\t\t{}", problem.name, problem.url.unwrap());
+    if args.print_online {
+        for problem in online {
+            table.add_row(row![problem.name, problem.url.unwrap(), false, true]);
+        }
     }
+
+    table.printstd();
 }
 
 fn main() {
@@ -224,5 +231,5 @@ fn main() {
     }
 
     get_local_problems(&args, &mut problems);
-    print_status(&problems);
+    print_status(&args, &problems);
 }
