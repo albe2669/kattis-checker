@@ -79,11 +79,10 @@ fn get_online_problems_page(
     let text = response.text().unwrap();
 
     let res = parse_online_problems_page(&text);
-    println!(
-        "Found {} problems on page {}",
-        res.as_ref().unwrap().len(),
-        page
-    );
+    match res {
+        Some(ref problems) => println!("Found {} problems on page {}", problems.len(), page),
+        None => println!("No problems found on page {page}"),
+    }
     res
 }
 
